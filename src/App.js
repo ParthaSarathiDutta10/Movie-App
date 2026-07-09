@@ -62,7 +62,8 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading , setIsLoading] = useState(false);
   const [error, setError] = useState("")
-  const query = "interstellar";
+  const query = "qqqqqq";
+  // when query mane search unrelated not matching type hbe  ... tokhon const query = "qqqqqq";
 
 
 
@@ -81,13 +82,18 @@ export default function App() {
 
             const data = await res.json();
             
+            if(data.Response  ===  'False') throw new Error("Movie not found");
+
             setMovies(data.Search);
-            setIsLoading(false);
+    
         }
 
         catch(err){
             console.error(err.mes);
             setError(err.message);
+        }
+        finally{
+                  setIsLoading(false);
         }
       }
 
