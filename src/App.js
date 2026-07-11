@@ -62,7 +62,9 @@ export default function App() {
   const [watched, setWatched] = useState([]);
   const [isLoading , setIsLoading] = useState(false);
   const [error, setError] = useState("")
-  const query = "qqqqqq";
+  const query = "interstellar";
+
+  // const query = "qqqqqq";
   // when query mane search unrelated not matching type hbe  ... tokhon const query = "qqqqqq";
 
 
@@ -93,7 +95,7 @@ export default function App() {
             setError(err.message);
         }
         finally{
-                  setIsLoading(false);
+             setIsLoading(false);
         }
       }
 
@@ -365,6 +367,36 @@ function WatchedSummary( {avgImdbRating , avgUserRating ,avgRuntime,watched} ){
   )
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
