@@ -59,10 +59,13 @@ const key = '2d9e86a4';
 
 export default function App() {
   const[movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
+  const [watched, setWatched] = useState(tempMovieData);
   const [isLoading , setIsLoading] = useState(false);
   const [error, setError] = useState("")
-  const query = "interstellar";
+  const [query, setQuery] = useState("Thor");
+  const tempQuery = "interstellar";
+  const [flag , setFlag] = useState(true);
+  const [click , setClicked] = useState(true);
 
   // const query = "qqqqqq";
   // when query mane search unrelated not matching type hbe  ... tokhon const query = "qqqqqq";
@@ -73,35 +76,69 @@ export default function App() {
   const avgUserRating = average(watched.map((movie) => movie.userRating));
   const avgRuntime = average(watched.map((movie) => movie.runtime));
 
+
+
+  // useEffect(function(){
+  //   console.log('After Intial render');
+  // },[])
+
+  // useEffect(function(){
+  //   console.log('After Every render');
+  // })
+
+  // console.log('During Render');
+
+  // useEffect(function(){
+  //   console.log("D");
+  // },[query])
+
+  function handleClick(){
+    setClicked(!click);
+  }
+
+console.log(click);
+  // Effect runs after Browser Paint
   useEffect(function(){
 
       async function fetchMovie() {
-        try{
-           setIsLoading(true);
-            const res= await fetch(`https://www.omdbapi.com/?apikey=${key}&s=${query}`);
 
-            if(!res.ok) throw new Error("Something went wrong with fetching movies");
+          if(query.length < 3){
+            setMovies([]);
+            setError("");
+            return;
+          }
 
-            const data = await res.json();
-            
-            if(data.Response  ===  'False') throw new Error("Movie not found");
+          try{
+            setIsLoading(true);
+            setError('');
+              const res= await fetch(`https://www.omdbapi.com/?apikey=${key}&s=${query}`);
 
-            setMovies(data.Search);
-    
-        }
+              if(!res.ok) throw new Error("Something went wrong with fetching movies");
 
-        catch(err){
-            console.error(err.mes);
-            setError(err.message);
-        }
-        finally{
-             setIsLoading(false);
-        }
+              const data = await res.json();
+              console.log(data.Search);
+              // if(query !== ''){
+                  if(data.Response  ===  'False') throw new Error("Movie not found");
+              // }
+            console.log(data.Search);
+              setMovies(data.Search);
+      
+          }
+
+          catch(err){
+              setError(err.message);
+          }
+
+          finally{
+              setIsLoading(false);
+          }
+
       }
+
 
       fetchMovie();
 
-  },[])
+  },[query])
 
   // const url =`https://www.omdbapi.com/?i=tt3896198&apikey=2d9e86a4`;
 
@@ -120,7 +157,7 @@ export default function App() {
   return (
     <>
       <NavBar>
-        <Search />
+        <Search query={query} setQuery={setQuery} />
         <NumResults  movies={movies}/>
       </NavBar>
       <Main >
@@ -137,18 +174,23 @@ export default function App() {
         <Box >
             {/* {isLoading ? <Loader /> : <MovieList movies={movies}  />} */}
             {isLoading && <Loader/>}
-            {!isLoading && !error && <MovieList movies={movies}  />}
+            {!isLoading && !error && <MovieList movies={movies} setClick={handleClick} />}
             {error && <ErrorMessage message={error} /> }
         </Box>
         <Box>
-            <WatchedSummary avgImdbRating={avgImdbRating} avgUserRating={avgUserRating} avgRuntime={avgRuntime} watched={watched} />
-            <WatchedMovieList  watched={watched} />  
+          {click && 
+              <>
+                <WatchedSummary avgImdbRating={avgImdbRating} avgUserRating={avgUserRating} avgRuntime={avgRuntime} watched={watched} />
+                <WatchedMovieList  watched={watched} />  
+              </>
+          }
         </Box> 
       </Main>
     </>
   );
 
 }
+
 
 function Loader(){
   return <p className="loader" >Loading...</p>
@@ -157,7 +199,7 @@ function Loader(){
 
 function ErrorMessage({message}){
   return <p className="error" >
-          <span>⛔️ </span>{message}
+          <span>⛔️</span>{message}
         </p>
 }
 
@@ -204,8 +246,8 @@ function NumResults({movies}){
 
 
 
-function Search(){
-  const [query, setQuery] = useState("");
+function Search({query, setQuery}){
+
   return(
         <input
               className="search"
@@ -279,20 +321,20 @@ function Box({children}){
 
 }
 
-function MovieList({movies}){
+function MovieList({movies,setClick}){
 
   return(
       <ul className="list">
               {movies?.map((movie) => (
-                <Movie movie={movie} key={movie.imdbID} />
+                <Movie movie={movie} setClick = {setClick} key={movie.imdbID} />
               ))}
       </ul>
   )
 }
 
-function Movie({movie}){
+function Movie({ movie, setClick }){
   return(
-                <li>
+                <li onClick={setClick} >
                   <img src={movie.Poster} alt={`${movie.Title} poster`} />
                   <h3>{movie.Title}</h3>
                   <div>
@@ -318,6 +360,9 @@ function WatchedMovieList({watched}){
   )
 }
 
+
+
+
 function WatchedMovie({movie}){
   return(
      <li key={movie.imdbID}>
@@ -340,6 +385,8 @@ function WatchedMovie({movie}){
       </li>
   )
 }
+
+
 
 function WatchedSummary( {avgImdbRating , avgUserRating ,avgRuntime,watched} ){
   return(
