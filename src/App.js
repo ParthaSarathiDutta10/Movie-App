@@ -58,14 +58,16 @@ const key = '2d9e86a4';
 
 
 export default function App() {
-  const[movies, setMovies] = useState([]);
+  const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState(tempMovieData);
   const [isLoading , setIsLoading] = useState(false);
   const [error, setError] = useState("")
   const [query, setQuery] = useState("Thor");
   const tempQuery = "interstellar";
-  const [flag , setFlag] = useState(true);
+  const [arrow , setArrow] = useState(true);
   const [click , setClicked] = useState(true);
+  const [selectedMovieId , setSelectedMovieId] = useState('');
+  const [movieDetails , setMovieDetails] = useState('');
 
   // const query = "qqqqqq";
   // when query mane search unrelated not matching type hbe  ... tokhon const query = "qqqqqq";
@@ -92,11 +94,17 @@ export default function App() {
   //   console.log("D");
   // },[query])
 
-  function handleClick(){
-    setClicked(!click);
-  }
+ 
 
-console.log(click);
+  function handleClick(id){
+   
+    
+     
+        setClicked((click) => selectedMovieId === id ? false : true );
+        setSelectedMovieId(id);
+    }
+
+
   // Effect runs after Browser Paint
   useEffect(function(){
 
@@ -140,6 +148,18 @@ console.log(click);
 
   },[query])
 
+
+  useEffect(function(){
+      async function clickedMovieDetails() {
+        const pes = await fetch(`https://www.omdbapi.com/?apikey=${key}&i=${selectedMovieId}`);
+        const datata= await pes.json();
+  
+         setMovieDetails(datata);
+      }
+      clickedMovieDetails();
+  },[selectedMovieId])
+
+
   // const url =`https://www.omdbapi.com/?i=tt3896198&apikey=2d9e86a4`;
 
 
@@ -178,10 +198,14 @@ console.log(click);
             {error && <ErrorMessage message={error} /> }
         </Box>
         <Box>
-          {click && 
+          {click ?
               <>
-                <WatchedSummary avgImdbRating={avgImdbRating} avgUserRating={avgUserRating} avgRuntime={avgRuntime} watched={watched} />
-                <WatchedMovieList  watched={watched} />  
+                  <WatchedSummary avgImdbRating={avgImdbRating} avgUserRating={avgUserRating} avgRuntime={avgRuntime} watched={watched} />
+                  <WatchedMovieList  watched={watched} click={click} />  
+              </>
+              :
+              <>
+              <MovieDetails movie_details={movieDetails} setClick={handleClick}   onClose={() => setSelectedMovieId(null)} />
               </>
           }
         </Box> 
@@ -208,6 +232,7 @@ const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
 // ⁉️⁉️⁉️⁉️⁉️  change  ⁉️⁉️⁉️⁉️⁉️⁉️⁉️⁉️
+
 
 
 function NavBar({children}){
@@ -313,7 +338,7 @@ function Box({children}){
                   className="btn-toggle"
                   onClick={() => setIsOpen((open) => !open)}
                 >
-              {isOpen ? "–" : "+"}
+              {isOpen ? "-" : "+"}
               </button>
                 {isOpen && children}
           </div>
@@ -334,7 +359,7 @@ function MovieList({movies,setClick}){
 
 function Movie({ movie, setClick }){
   return(
-                <li onClick={setClick} >
+                <li onClick={() => setClick(movie.imdbID)}  >
                   <img src={movie.Poster} alt={`${movie.Title} poster`} />
                   <h3>{movie.Title}</h3>
                   <div>
@@ -348,15 +373,21 @@ function Movie({ movie, setClick }){
 }
 
 
-function WatchedMovieList({watched}){
+function WatchedMovieList({watched , click}){
 
 
   return(
-       <ul className="list">
+      <>
+        {click ? (
+             <div></div>
+        ) : (
+           <ul className="list">
                 {watched.map((movie) => (
                   <WatchedMovie movie={movie}  key={movie.imdbID}/>
                 ))}
-        </ul>
+              </ul>
+        )}
+      </>
   )
 }
 
@@ -387,6 +418,96 @@ function WatchedMovie({movie}){
 }
 
 
+function MovieDetails({movie_details , setClick , onClose}){
+  return(
+    <div>
+      <button onClick={onClose} >🔙</button>
+      <p>{movie_details.Actors}</p>
+      <p>{movie_details.BoxOffice}</p>
+      <p>{movie_details.Genre}</p>
+      <p>{movie_details.Plot}</p>
+      <p>{movie_details.Title}</p>
+      <img src={movie_details.Poster} alt="Movie Poster" />
+    </div>
+  )
+}
+
+// {Title: 'Thor: Ragnarok', Year: '2017', Rated: 'PG-13', Released: '03 Nov 2017', Runtime: '130 min', …}
+// Actors
+// : 
+// "Chris Hemsworth, Tom Hiddleston, Cate Blanchett"
+// Awards
+// : 
+// "6 wins & 50 nominations total"
+// BoxOffice
+// : 
+// "$315,058,289"
+// Country
+// : 
+// "United States"
+// DVD
+// : 
+// "N/A"
+// Director
+// : 
+// "Taika Waititi"
+// Genre
+// : 
+// "Action, Adventure, Comedy"
+// Language
+// : 
+// "English"
+// Metascore
+// : 
+// "74"
+// Plot
+// : 
+// "Imprisoned on the planet Sakaar, Thor must race against time to return to Asgard and stop Ragnarök, the destruction of his world, at the hands of the powerful and ruthless villain Hela."
+// Poster
+// : 
+// "https://m.media-amazon.com/images/M/MV5BMjMyNDkzMzI1OF5BMl5BanBnXkFtZTgwODcxODg5MjI@._V1_QL75_UX380_CR0,0,380,562_.jpg"
+// Production
+// : 
+// "N/A"
+// Rated
+// : 
+// "PG-13"
+// Ratings
+// : 
+// (3) [{…}, {…}, {…}]
+// Released
+// : 
+// "03 Nov 2017"
+// Response
+// : 
+// "True"
+// Runtime
+// : 
+// "130 min"
+// Title
+// : 
+// "Thor: Ragnarok"
+// Type
+// : 
+// "movie"
+// Website
+// : 
+// "N/A"
+// Writer
+// : 
+// "Eric Pearson, Craig Kyle, Christopher Yost"
+// Year
+// : 
+// "2017"
+// imdbID
+// : 
+// "tt3501632"
+// imdbRating
+// : 
+// "7.9"
+// imdbVotes
+// : 
+// "892,533"
 
 function WatchedSummary( {avgImdbRating , avgUserRating ,avgRuntime,watched} ){
   return(
