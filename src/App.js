@@ -66,8 +66,8 @@ export default function App() {
   const tempQuery = "interstellar";
   const [arrow , setArrow] = useState(true);
   const [click , setClicked] = useState(true);
-  const [selectedMovieId , setSelectedMovieId] = useState('');
-  const [movieDetails , setMovieDetails] = useState('');
+  const [selectedMovieId , setSelectedMovieId] = useState(null);
+  const [movieDetails , setMovieDetails] = useState(null);
 
   // const query = "qqqqqq";
   // when query mane search unrelated not matching type hbe  ... tokhon const query = "qqqqqq";
@@ -96,14 +96,11 @@ export default function App() {
 
  
 
-  function handleClick(id){
-   
-    
-     
-        setClicked((click) => selectedMovieId === id ? false : true );
-        setSelectedMovieId(id);
+    function handleClick(id) {
+      setSelectedMovieId((currentId) =>
+        currentId === id ? null : id
+      );
     }
-
 
   // Effect runs after Browser Paint
   useEffect(function(){
@@ -150,6 +147,7 @@ export default function App() {
 
 
   useEffect(function(){
+      if (!selectedMovieId) return;
       async function clickedMovieDetails() {
         const pes = await fetch(`https://www.omdbapi.com/?apikey=${key}&i=${selectedMovieId}`);
         const datata= await pes.json();
@@ -198,15 +196,17 @@ export default function App() {
             {error && <ErrorMessage message={error} /> }
         </Box>
         <Box>
-          {click ?
+          {selectedMovieId && movieDetails  ?
+              <>
+              <MovieDetails movie_details={movieDetails} setClick={handleClick}     onClose={() => setSelectedMovieId(null)} />
+              </>
+              :
               <>
                   <WatchedSummary avgImdbRating={avgImdbRating} avgUserRating={avgUserRating} avgRuntime={avgRuntime} watched={watched} />
                   <WatchedMovieList  watched={watched} click={click} />  
               </>
-              :
-              <>
-              <MovieDetails movie_details={movieDetails} setClick={handleClick}   onClose={() => setSelectedMovieId(null)} />
-              </>
+              
+            
           }
         </Box> 
       </Main>
@@ -346,7 +346,7 @@ function Box({children}){
 
 }
 
-function MovieList({movies,setClick}){
+function MovieList({movies ,setClick}){
 
   return(
       <ul className="list">
@@ -373,20 +373,20 @@ function Movie({ movie, setClick }){
 }
 
 
-function WatchedMovieList({watched , click}){
+function WatchedMovieList({watched }){
 
 
   return(
       <>
-        {click ? (
+       
              <div></div>
-        ) : (
+      
            <ul className="list">
                 {watched.map((movie) => (
                   <WatchedMovie movie={movie}  key={movie.imdbID}/>
                 ))}
               </ul>
-        )}
+  
       </>
   )
 }
@@ -418,7 +418,7 @@ function WatchedMovie({movie}){
 }
 
 
-function MovieDetails({movie_details , setClick , onClose}){
+function MovieDetails({movie_details  , onClose}){
   return(
     <div>
       <button onClick={onClose} >🔙</button>
