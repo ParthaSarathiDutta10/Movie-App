@@ -59,7 +59,7 @@ const key = '2d9e86a4';
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState(tempMovieData);
+  const [watched, setWatched] = useState([]);
   const [isLoading , setIsLoading] = useState(false);
   const [error, setError] = useState("")
   const [query, setQuery] = useState("Thor");
@@ -69,6 +69,8 @@ export default function App() {
   const [selectedMovieId , setSelectedMovieId] = useState(null);
   const [movieDetails , setMovieDetails] = useState(null);
 
+
+
   // const query = "qqqqqq";
   // when query mane search unrelated not matching type hbe  ... tokhon const query = "qqqqqq";
 
@@ -76,7 +78,7 @@ export default function App() {
 
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
   const avgUserRating = average(watched.map((movie) => movie.userRating));
-  const avgRuntime = average(watched.map((movie) => movie.runtime));
+  const avgRuntime = average(watched.map((movie)    => movie.runtime));
 
 
 
@@ -94,13 +96,16 @@ export default function App() {
   //   console.log("D");
   // },[query])
 
+  function handleWatched(watchedItem){
+    setWatched((watched) => [...watched, watchedItem]);
+  }
  
 
-    function handleClick(id) {
+  function handleClick(id) {
       setSelectedMovieId((currentId) =>
         currentId === id ? null : id
       );
-    }
+  }
 
   // Effect runs after Browser Paint
   useEffect(function(){
@@ -198,15 +203,13 @@ export default function App() {
         <Box>
           {selectedMovieId && movieDetails  ?
               <>
-              <MovieDetails movie_details={movieDetails} setClick={handleClick}     onClose={() => setSelectedMovieId(null)} />
+                  <MovieDetails movie_details={movieDetails}   key={selectedMovieId}  handleWatched={handleWatched}   onClose={() => setSelectedMovieId(null)} />
               </>
               :
               <>
                   <WatchedSummary avgImdbRating={avgImdbRating} avgUserRating={avgUserRating} avgRuntime={avgRuntime} watched={watched} />
                   <WatchedMovieList  watched={watched} click={click} />  
               </>
-              
-            
           }
         </Box> 
       </Main>
@@ -351,7 +354,7 @@ function MovieList({movies ,setClick}){
   return(
       <ul className="list">
               {movies?.map((movie) => (
-                <Movie movie={movie} setClick = {setClick} key={movie.imdbID} />
+                <Movie movie={movie} setClick = {setClick} key={movie.imdbID}  />
               ))}
       </ul>
   )
@@ -373,19 +376,18 @@ function Movie({ movie, setClick }){
 }
 
 
-function WatchedMovieList({watched }){
-
+function WatchedMovieList({watched  }){
 
   return(
       <>
        
              <div></div>
       
-           <ul className="list">
+          <ul className="list">
                 {watched.map((movie) => (
                   <WatchedMovie movie={movie}  key={movie.imdbID}/>
                 ))}
-              </ul>
+          </ul>
   
       </>
   )
@@ -418,19 +420,112 @@ function WatchedMovie({movie}){
 }
 
 
-function MovieDetails({movie_details  , onClose}){
+
+const  starContainerStyle = { 
+    display : "flex",
+    padding: `${2}rem`,
+};
+
+function MovieDetails({movie_details , onClose , handleWatched   }){
+  const [hoverRating , setHoverRating] = useState(0);
+  const [rating ,setRating]= useState(0);
+
+    function handleRating(i){
+      setRating(i+1);
+    }
+    const textStyle= {
+      lineHeight: "1",
+      margin: '0',
+      color:"yellow",
+      fontSize:`${28 / 1.5}px`
+    }
+
   return(
     <div>
       <button onClick={onClose} >🔙</button>
+      <img style={{ width: "20rem", height: "30rem" }} src={movie_details.Poster} alt="Movie Poster" />
       <p>{movie_details.Actors}</p>
       <p>{movie_details.BoxOffice}</p>
       <p>{movie_details.Genre}</p>
-      <p>{movie_details.Plot}</p>
       <p>{movie_details.Title}</p>
-      <img src={movie_details.Poster} alt="Movie Poster" />
+
+      <div style={starContainerStyle} >
+          {Array.from({length:10},(_,i)=>(
+            <Star key={i} size={2} onRate = {() => handleRating(i)} color={'yellow'} full={hoverRating ? hoverRating >= i +1:rating >= i+1} onMouseEnter={() => setHoverRating(i+1)}  onMouseLeave ={() => setHoverRating(0)}/>
+          ))}
+          <p style={textStyle} >
+            {hoverRating ? hoverRating : rating }
+          </p>
+      </div>
+
+      {rating && (
+          <button className="btn-add" onClick={() => handleWatched(movie_details)}  > + Add list</button>
+      )  }
+
+      <p >{movie_details.Plot}</p>
+      {  console.log(Number(rating))}
     </div>
   )
 }
+
+
+function Star({size, full , onRate, onMouseEnter , onMouseLeave}){
+      const starStyle = {
+        width:`${size}rem`,
+        height:`${size}px`,
+        display:'block',
+        cursor:'pointer',
+    }
+    const svgStyle={
+        color :'yellow'
+    }
+  return(
+    <span style={starStyle} onClick={onRate} onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave} > 
+                {/* <svg  style={svgStyle}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill={"yellow"}
+                stroke={"yellow"}
+                >
+                <path
+                    d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
+                </svg>  */}
+       
+                {full ?
+                    <svg  style={svgStyle}
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill={"yellow"}
+                      stroke={"yellow"}
+                    >
+                <path
+                    d = "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"
+                />
+                </svg>
+                :
+                <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke={"yellow"}
+                          >
+                          <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d = "M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
+                          />
+                </svg>
+
+                
+
+             }
+                
+    </span>
+  )
+}
+
 
 // {Title: 'Thor: Ragnarok', Year: '2017', Rated: 'PG-13', Released: '03 Nov 2017', Runtime: '130 min', …}
 // Actors
@@ -511,7 +606,7 @@ function MovieDetails({movie_details  , onClose}){
 
 function WatchedSummary( {avgImdbRating , avgUserRating ,avgRuntime,watched} ){
   return(
-       <div className="summary">
+      <div className="summary">
           <h2>Movies you watched</h2>
               <div>
                   <p>
@@ -531,43 +626,9 @@ function WatchedSummary( {avgImdbRating , avgUserRating ,avgRuntime,watched} ){
                           <span>{avgRuntime} min</span>
                       </p>
                 </div>
-          </div>
+      </div>
   )
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
