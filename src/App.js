@@ -203,7 +203,7 @@ export default function App() {
         <Box>
           {selectedMovieId && movieDetails  ?
               <>
-                  <MovieDetails movie_details={movieDetails}   key={selectedMovieId}  handleWatched={handleWatched}   onClose={() => setSelectedMovieId(null)} />
+                  <MovieDetails movie_details={movieDetails}   key={selectedMovieId}  handleWatched={handleWatched}   onClose={() => setSelectedMovieId(null)} watched={watched} />
               </>
               :
               <>
@@ -426,41 +426,66 @@ const  starContainerStyle = {
     padding: `${2}rem`,
 };
 
-function MovieDetails({movie_details , onClose , handleWatched   }){
+function MovieDetails({movie_details , onClose , handleWatched, watched }){
   const [hoverRating , setHoverRating] = useState(0);
   const [rating ,setRating]= useState(0);
 
-    function handleRating(i){
-      setRating(i+1);
-    }
-    const textStyle= {
-      lineHeight: "1",
-      margin: '0',
-      color:"yellow",
-      fontSize:`${28 / 1.5}px`
-    }
+  const isWatched = watched?.some((movie) => movie.imdbID === movie_details.imdbID);
+  const watchedUserRating = watched?.find((movie) => movie.imdbID === movie_details.imdbID)?.userRating;
+
+  function handleRating(i){
+    setRating(i+1);
+  }
+
+  function handleAdd() {
+    const newWatchedMovie = {
+      imdbID: movie_details.imdbID,
+      Title: movie_details.Title,
+      Year: movie_details.Year,
+      Poster: movie_details.Poster,
+      imdbRating: Number(movie_details.imdbRating) || 0,
+      userRating: Number(rating),
+      runtime: Number(movie_details.Runtime?.split(" ").at(0)) || 0,
+    };
+    handleWatched(newWatchedMovie);
+  }
+
+  const textStyle= {
+    lineHeight: "1",
+    margin: '0',
+    color:"yellow",
+    fontSize:`${28 / 1.5}px`
+  }
 
   return(
     <div>
-      <button onClick={onClose} >🔙</button>
+      <button className="btn-back" onClick={onClose} >🔙</button>
       <img style={{ width: "20rem", height: "30rem" }} src={movie_details.Poster} alt="Movie Poster" />
       <p>{movie_details.Actors}</p>
       <p>{movie_details.BoxOffice}</p>
       <p>{movie_details.Genre}</p>
       <p>{movie_details.Title}</p>
 
-      <div style={starContainerStyle} >
-          {Array.from({length:10},(_,i)=>(
-            <Star key={i} size={2} onRate = {() => handleRating(i)} color={'yellow'} full={hoverRating ? hoverRating >= i +1:rating >= i+1} onMouseEnter={() => setHoverRating(i+1)}  onMouseLeave ={() => setHoverRating(0)}/>
-          ))}
-          <p style={textStyle} >
-            {hoverRating ? hoverRating : rating }
-          </p>
-      </div>
+      <div className="rating">
+        {!isWatched ? (
+          <>
+            <div style={starContainerStyle} >
+                {Array.from({length:10},(_,i)=>(
+                  <Star key={i} size={2} onRate = {() => handleRating(i)} color={'yellow'} full={hoverRating ? hoverRating >= i +1:rating >= i+1} onMouseEnter={() => setHoverRating(i+1)}  onMouseLeave ={() => setHoverRating(0)}/>
+                ))}
+                <p style={textStyle} >
+                  {hoverRating ? hoverRating : rating }
+                </p>
+            </div>
 
-      {rating && (
-          <button className="btn-add" onClick={() => handleWatched(movie_details)}  > + Add list</button>
-      )  }
+            {rating > 0 && (
+                <button className="btn-add" onClick={handleAdd}  > + Add list</button>
+            )  }
+          </>
+        ) : (
+          <p>You rated with movie {watchedUserRating} ⭐</p>
+        )}
+      </div>
 
       <p >{movie_details.Plot}</p>
       {  console.log(Number(rating))}
